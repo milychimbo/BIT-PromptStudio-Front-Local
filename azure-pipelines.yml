@@ -1,0 +1,85 @@
+trigger:
+- develop
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  nodeVersion: '22.x'
+
+steps:
+- checkout: self
+
+- task: NodeTool@0
+  displayName: 'Use Node.js'
+  inputs:
+    versionSpec: '$(nodeVersion)'
+
+# build del front
+- script: |
+    npm ci
+    npm run build
+  displayName: 'Install & build'
+
+# preparar carpeta "site" con dist + package.json + node_modules (solo serve)
+- bash: |
+    set -euo pipefail
+
+    mkdir -p "$(Build.ArtifactStagingDirectory)/site"
+    cp -R dist "$(Build.ArtifactStagingDirectory)/site/dist"
+
+    cat > "$(Build.ArtifactStagingDirectory)/site/package.json" <<'EOF'
+    {
+      "name": "bitpromptstudio-portal",
+      "private": true,
+      "dependencies": {
+        "serve": "^14.0.1"
+      },
+      "scripts": {
+        "start": "node ./node_modules/serve/build/main.js -s dist --listen $PORT"
+      }
+    }
+    EOF
+
+    cd "$(Build.ArtifactStagingDirectory)/site"
+    npm ci --omit=dev
+
+    echo "Site ready:"
+    ls -la
+  displayName: 'Prepare runtime package (includes serve)'
+
+- task: ArchiveFiles@2
+  displayName: 'Archive site'
+  inputs:
+    rootFolderOrFile: '$(Build.ArtifactStagingDirectory)/site'
+    includeRootFolder: false
+    archiveType: 'zip'
+    archiveFile: '$(Build.ArtifactStagingDirectory)/app.zip'
+    replaceExistingArchive: true
+
+# deploy (kudu)
+- bash: |
+    set -euo pipefail
+    USER="$(KUDU_USER)"
+    PASS="$(KUDU_PASSWORD)"
+    URL="$(KUDU_URL)"
+    ZIP="$(Build.ArtifactStagingDirectory)/app.zip"
+
+    curl --fail --show-error -sS \
+      -u "$USER:$PASS" \
+      -X POST "$URL/api/zipdeploy?isAsync=true" \
+      -H "Content-Type: application/zip" \
+      --data-binary @"$ZIP"
+
+    # esperar resultado
+    for i in {1..60}; do
+      STATUS_JSON=$(curl -sS -u "$USER:$PASS" "$URL/api/deployments/latest")
+      echo "Poll $i: $STATUS_JSON"
+      echo "$STATUS_JSON" | grep -q '"status":4' && echo "✅ Deployment successful" && exit 0
+      echo "$STATUS_JSON" | grep -q '"status":3' && echo "❌ Deployment failed" && exit 1
+      sleep 5
+    done
+
+    echo "❌ Deployment timed out"
+    exit 1
+  displayName: 'Deploy via Kudu (ZipDeploy + wait)'
