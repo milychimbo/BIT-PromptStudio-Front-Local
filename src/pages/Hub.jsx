@@ -1,5 +1,6 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useIsAuthenticated, useMsal } from '@azure/msal-react';
 import { useTheme } from '../context/ThemeContext';
 import styles from './Hub.module.css';
 import logoLight from '../assets/1.png';
@@ -7,6 +8,17 @@ import logoDark from '../assets/2.png';
 
 const Hub = () => {
     const { theme } = useTheme();
+    const isAuthenticated = useIsAuthenticated();
+    const { instance } = useMsal();
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        instance.logoutRedirect({
+            postLogoutRedirectUri: "/",
+        });
+    };
+
+    const [filterType, setFilterType] = React.useState('Nombre');
 
     const topPrompts = [
         {
@@ -64,19 +76,36 @@ const Hub = () => {
                 </Link>
 
                 <nav className={styles.nav}>
-                    <button className={styles.navButton}>
-                        <span className="material-icons">add</span>
-                        Nuevo Prompt
-                    </button>
-                    <button className={styles.navButton}>
-                        <span className="material-icons">folder_special</span>
-                        Mis Prompts
-                    </button>
+                    {isAuthenticated && (
+                        <>
+                            <button className={styles.navButton} onClick={() => navigate('/editor')}>
+                                <span className="material-icons">add</span>
+                                Nuevo Prompt
+                            </button>
+                            <button className={styles.navButton}>
+                                <span className="material-icons">folder_special</span>
+                                Mis Prompts
+                            </button>
+                        </>
+                    )}
                     <button className={styles.navButton}>
                         <span className="material-icons">library_books</span>
                         Biblioteca
                     </button>
                 </nav>
+
+                {isAuthenticated && (
+                    <div style={{ padding: '1rem', marginTop: 'auto', borderTop: '1px solid var(--color-border-light)' }}>
+                        <button
+                            className={styles.navButton}
+                            onClick={handleLogout}
+                            style={{ color: '#ef4444' }} // Red color for logout
+                        >
+                            <span className="material-icons">logout</span>
+                            Cerrar Sesión
+                        </button>
+                    </div>
+                )}
             </aside>
 
             {/* Main Content (Sections 2 & 3) */}
@@ -93,13 +122,19 @@ const Hub = () => {
 
                     <div className={styles.chatInputArea}>
                         <div className={styles.inputWrapper}>
-                            <button className={styles.filterBtn}>
-                                <span className="material-icons">tune</span>
-                            </button>
+                            <select
+                                className={styles.filterSelect}
+                                value={filterType}
+                                onChange={(e) => setFilterType(e.target.value)}
+                            >
+                                <option value="Nombre">Nombre</option>
+                                <option value="Tag">Tag</option>
+                                <option value="Autor">Autor</option>
+                            </select>
                             <input
                                 type="text"
                                 className={styles.chatInput}
-                                placeholder="Escribe tu prompt..."
+                                placeholder="Busca un prompt a tu medida..."
                             />
                             <button className={styles.sendBtn}>
                                 <span className="material-icons">arrow_upward</span>
