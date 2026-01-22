@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useMsal, useIsAuthenticated } from '@azure/msal-react';
+import { loginRequest } from '../authConfig';
 import Button from '../components/common/Button';
 import styles from './Login.module.css';
 import { useTheme } from '../context/ThemeContext';
@@ -9,14 +10,21 @@ import logoDark from '../assets/2.png';
 
 const Login = () => {
     const { theme } = useTheme();
-    const [email, setEmail] = useState('');
-    const { login } = useAuth();
+    const { instance } = useMsal();
+    const isAuthenticated = useIsAuthenticated();
     const navigate = useNavigate();
 
-    const handleSubmit = (e) => {
+    useEffect(() => {
+        if (isAuthenticated) {
+            navigate('/editor');
+        }
+    }, [isAuthenticated, navigate]);
+
+    const handleLogin = (e) => {
         e.preventDefault();
-        login(email);
-        navigate('/editor');
+        instance.loginRedirect(loginRequest).catch(e => {
+            console.error(e);
+        });
     };
 
     return (
@@ -34,45 +42,22 @@ const Login = () => {
                     <div className={styles.bar}></div>
                     <div className={styles.cardBody}>
                         <h2 className={styles.formTitle}>Inicia sesión en tu espacio de trabajo</h2>
-                        <form onSubmit={handleSubmit}>
-                            <div className={styles.formGroup}>
-                                <label className={styles.label} htmlFor="email">Correo electrónico de trabajo</label>
-                                <div className={styles.inputWrapper}>
-                                    <span className={`material-icons ${styles.inputIcon}`}>mail</span>
-                                    <input
-                                        type="email"
-                                        id="email"
-                                        className={styles.input}
-                                        placeholder="nombre@empresa.com"
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        required
-                                    />
-                                </div>
-                            </div>
-
-                            <div className={styles.formGroup}>
-                                <div className={styles.row}>
-                                    <label className={styles.label} htmlFor="password">Contraseña</label>
-                                    <a href="#" className={styles.forgot}>¿Olvidaste tu contraseña?</a>
-                                </div>
-                                <div className={styles.inputWrapper}>
-                                    <span className={`material-icons ${styles.inputIcon}`}>lock</span>
-                                    <input type="password" id="password" className={styles.input} placeholder="••••••••" />
-                                </div>
-                            </div>
-
-                            <div className={styles.checkboxRow}>
-                                <input type="checkbox" id="remember" className={styles.checkbox} />
-                                <label htmlFor="remember" className={styles.checkboxLabel}>Mantener sesión iniciada</label>
-                            </div>
-
-                            <Button type="submit" className="w-full justify-center" style={{ width: '100%' }}>
-                                Acceder
-                                <span className="material-icons" style={{ fontSize: '1rem', marginLeft: '0.5rem' }}>arrow_forward</span>
+                        <div style={{ padding: '0 2rem' }}>
+                            <p style={{ textAlign: 'center', marginBottom: '2rem', color: '#666' }}>
+                                Accede con tu cuenta corporativa de Microsoft
+                            </p>
+                            <Button
+                                type="button"
+                                onClick={handleLogin}
+                                className="w-full justify-center"
+                                style={{ width: '100%', marginBottom: '1rem' }}
+                            >
+                                <span className="material-icons" style={{ marginRight: '0.5rem' }}>login</span>
+                                Iniciar Sesión con Microsoft
                             </Button>
-                        </form>
+                        </div>
 
+                        {/* 
                         <div className={styles.divider}>
                             <span className={styles.dividerText}>O continúa con</span>
                         </div>
@@ -80,6 +65,7 @@ const Login = () => {
                         <button type="button" className={styles.googleBtn}>
                             <span style={{ marginRight: '0.5rem', fontWeight: 'bold' }}>G</span> Iniciar sesión con Google
                         </button>
+                        */}
                     </div>
                     <div className={styles.cardFooter}>
                         Protegido por Enterprise SSO. <br />

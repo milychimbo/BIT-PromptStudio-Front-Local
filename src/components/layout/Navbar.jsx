@@ -6,6 +6,8 @@ import Modal from '../common/Modal';
 import { useTheme } from '../../context/ThemeContext';
 import logoLight from '../../assets/1.png';
 import logoDark from '../../assets/2.png';
+import { useMsal, useIsAuthenticated } from '@azure/msal-react';
+import { loginRequest } from '../../authConfig';
 
 const Navbar = () => {
     const { theme, toggleTheme } = useTheme();
@@ -19,6 +21,14 @@ const Navbar = () => {
         if (isMenuOpen) setIsMenuOpen(false);
     };
 
+    const { instance } = useMsal();
+    const isAuthenticated = useIsAuthenticated();
+    const handleLogin = () => {
+        instance.loginRedirect(loginRequest).catch(e => console.log(e));
+    };
+    const handleLogout = () => {
+        instance.logoutRedirect().catch(e => console.log(e));
+    };
     return (
         <>
             <nav className={styles.navbar}>
@@ -49,10 +59,16 @@ const Navbar = () => {
                         <button onClick={toggleHelp} className={styles.link} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: '0' }}>
                             Ayuda
                         </button>
-                        <Link to="/login" className={styles.link}>Log in</Link>
-                        {/* <Link to="/signup">
-                            <Button>Get Started</Button>
-                        </Link> */}
+
+                        {isAuthenticated ? (
+                            <button onClick={handleLogout} className={styles.link} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: '0' }}>
+                                Log out
+                            </button>
+                        ) : (
+                            <button onClick={handleLogin} className={styles.link} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: '0' }}>
+                                Log in
+                            </button>
+                        )}
                     </div>
 
                     <div className={`${styles.mobileMenu} ${isMenuOpen ? styles.mobileMenuOpen : ''}`} onClick={toggleMenu}>
