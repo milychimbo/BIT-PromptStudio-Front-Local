@@ -27,7 +27,7 @@ const Hub = () => {
             desc: "Create comprehensive SEO-optimized blog posts with keyword integration.",
             author: "Emily Chimbo",
             tags: ["Marketing", "SEO", "Content"],
-            rating: 4.8,
+            rating: 84,
             likes: 1240,
             views: "5.2k",
             downloads: 856
@@ -38,7 +38,7 @@ const Hub = () => {
             desc: "Expertly refactor Python legacy code to modern standards.",
             author: "Johann Calva",
             tags: ["Dev", "Python", "Clean Code"],
-            rating: 4.9,
+            rating: 79,
             likes: 980,
             views: "3.1k",
             downloads: 620
@@ -49,7 +49,7 @@ const Hub = () => {
             desc: "Generate Jest + Testing Library test cases instantly.",
             author: "Dev Team",
             tags: ["React", "Testing", "Javascript"],
-            rating: 4.5,
+            rating: 64,
             likes: 750,
             views: "2.8k",
             downloads: 410
@@ -60,7 +60,7 @@ const Hub = () => {
             desc: "Convert plain English questions into complex SQL queries.",
             author: "Data Squad",
             tags: ["Data", "SQL", "Analytics"],
-            rating: 4.7,
+            rating: 56,
             likes: 620,
             views: "2.5k",
             downloads: 380
@@ -174,12 +174,12 @@ const Hub = () => {
                                 <div className={styles.cardRight}>
                                     <div className={styles.metric}>
                                         <span className="material-icons" style={{ fontSize: '1rem', marginRight: '0.25rem' }}>star</span>
-                                        <span className={styles.rating}>{prompt.rating}</span>/5
+                                        <span className={styles.rating}>{prompt.rating}</span>%
                                     </div>
-                                    <div className={styles.metric}>
+                                    {/*<div className={styles.metric}>
                                         <span className="material-icons" style={{ fontSize: '1rem', marginRight: '0.25rem' }}>thumb_up</span>
                                         {prompt.likes}
-                                    </div>
+                                    </div>*/}
                                     <div className={styles.metric}>
                                         <span className="material-icons" style={{ fontSize: '1rem', marginRight: '0.25rem' }}>visibility</span>
                                         {prompt.views}
@@ -188,10 +188,14 @@ const Hub = () => {
                                         <span className="material-icons" style={{ fontSize: '1rem', marginRight: '0.25rem' }}>download</span>
                                         {prompt.downloads}
                                     </div>
+                                    {isAuthenticated && (
+                                        <>
+                                            <button className={styles.editBtn}>
+                                                <span className="material-icons" style={{ fontSize: '1.25rem' }}>edit</span>
+                                            </button>
+                                        </>
+                                    )}
 
-                                    <button className={styles.editBtn}>
-                                        <span className="material-icons" style={{ fontSize: '1.25rem' }}>edit</span>
-                                    </button>
                                 </div>
                             </div>
                         ))}

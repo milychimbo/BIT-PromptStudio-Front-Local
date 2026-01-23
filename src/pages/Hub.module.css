@@ -406,6 +406,11 @@
 }
 
 .filterSelect option {
-    background-color: white;
-    color: var(--text-main);
+    background-color: var(--color-surface-light);
+    color: var(--color-text-main-light);
+}
+
+[data-theme="dark"] .filterSelect option {
+    background-color: var(--color-surface-dark);
+    color: var(--color-text-main-dark);
 }
