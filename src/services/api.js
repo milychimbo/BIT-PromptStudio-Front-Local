@@ -33,3 +33,36 @@ export const fixPrompt = async (prompt, token = null) => {
         throw error;
     }
 };
+
+/**
+ * Save a prompt to the backend
+ * @param {Object} promptData - The prompt data to save
+ * @param {string} token - The access token
+ * @returns {Promise<Object>} - The saved prompt data
+ */
+export const savePrompt = async (promptData, token = null) => {
+    try {
+        const headers = {
+            'Content-Type': 'application/json',
+        };
+
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const response = await fetch(`${API_BASE_URL}/api/prompts`, {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify(promptData),
+        });
+
+        if (!response.ok) {
+            throw new Error(`API Error: ${response.status} ${response.statusText}`);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error saving prompt:', error);
+        throw error;
+    }
+};

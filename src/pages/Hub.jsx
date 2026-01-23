@@ -1,5 +1,6 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useIsAuthenticated, useMsal } from '@azure/msal-react';
 import { useTheme } from '../context/ThemeContext';
 import styles from './Hub.module.css';
 import logoLight from '../assets/1.png';
@@ -7,6 +8,17 @@ import logoDark from '../assets/2.png';
 
 const Hub = () => {
     const { theme } = useTheme();
+    const isAuthenticated = useIsAuthenticated();
+    const { instance } = useMsal();
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        instance.logoutRedirect({
+            postLogoutRedirectUri: "/",
+        });
+    };
+
+    const [filterType, setFilterType] = React.useState('Nombre');
 
     const topPrompts = [
         {
@@ -15,7 +27,7 @@ const Hub = () => {
             desc: "Create comprehensive SEO-optimized blog posts with keyword integration.",
             author: "Emily Chimbo",
             tags: ["Marketing", "SEO", "Content"],
-            rating: 4.8,
+            rating: 84,
             likes: 1240,
             views: "5.2k",
             downloads: 856
@@ -26,7 +38,7 @@ const Hub = () => {
             desc: "Expertly refactor Python legacy code to modern standards.",
             author: "Johann Calva",
             tags: ["Dev", "Python", "Clean Code"],
-            rating: 4.9,
+            rating: 79,
             likes: 980,
             views: "3.1k",
             downloads: 620
@@ -37,7 +49,7 @@ const Hub = () => {
             desc: "Generate Jest + Testing Library test cases instantly.",
             author: "Dev Team",
             tags: ["React", "Testing", "Javascript"],
-            rating: 4.5,
+            rating: 64,
             likes: 750,
             views: "2.8k",
             downloads: 410
@@ -48,7 +60,7 @@ const Hub = () => {
             desc: "Convert plain English questions into complex SQL queries.",
             author: "Data Squad",
             tags: ["Data", "SQL", "Analytics"],
-            rating: 4.7,
+            rating: 56,
             likes: 620,
             views: "2.5k",
             downloads: 380
@@ -64,19 +76,36 @@ const Hub = () => {
                 </Link>
 
                 <nav className={styles.nav}>
-                    <button className={styles.navButton}>
-                        <span className="material-icons">add</span>
-                        Nuevo Prompt
-                    </button>
-                    <button className={styles.navButton}>
-                        <span className="material-icons">folder_special</span>
-                        Mis Prompts
-                    </button>
+                    {isAuthenticated && (
+                        <>
+                            <button className={styles.navButton} onClick={() => navigate('/editor')}>
+                                <span className="material-icons">add</span>
+                                Nuevo Prompt
+                            </button>
+                            <button className={styles.navButton}>
+                                <span className="material-icons">folder_special</span>
+                                Mis Prompts
+                            </button>
+                        </>
+                    )}
                     <button className={styles.navButton}>
                         <span className="material-icons">library_books</span>
                         Biblioteca
                     </button>
                 </nav>
+
+                {isAuthenticated && (
+                    <div style={{ padding: '1rem', marginTop: 'auto', borderTop: '1px solid var(--color-border-light)' }}>
+                        <button
+                            className={styles.navButton}
+                            onClick={handleLogout}
+                            style={{ color: '#ef4444' }} // Red color for logout
+                        >
+                            <span className="material-icons">logout</span>
+                            Cerrar Sesión
+                        </button>
+                    </div>
+                )}
             </aside>
 
             {/* Main Content (Sections 2 & 3) */}
@@ -93,13 +122,19 @@ const Hub = () => {
 
                     <div className={styles.chatInputArea}>
                         <div className={styles.inputWrapper}>
-                            <button className={styles.filterBtn}>
-                                <span className="material-icons">tune</span>
-                            </button>
+                            <select
+                                className={styles.filterSelect}
+                                value={filterType}
+                                onChange={(e) => setFilterType(e.target.value)}
+                            >
+                                <option value="Nombre">Nombre</option>
+                                <option value="Tag">Tag</option>
+                                <option value="Autor">Autor</option>
+                            </select>
                             <input
                                 type="text"
                                 className={styles.chatInput}
-                                placeholder="Escribe tu prompt..."
+                                placeholder="Busca un prompt a tu medida..."
                             />
                             <button className={styles.sendBtn}>
                                 <span className="material-icons">arrow_upward</span>
@@ -139,12 +174,12 @@ const Hub = () => {
                                 <div className={styles.cardRight}>
                                     <div className={styles.metric}>
                                         <span className="material-icons" style={{ fontSize: '1rem', marginRight: '0.25rem' }}>star</span>
-                                        <span className={styles.rating}>{prompt.rating}</span>/5
+                                        <span className={styles.rating}>{prompt.rating}</span>%
                                     </div>
-                                    <div className={styles.metric}>
+                                    {/*<div className={styles.metric}>
                                         <span className="material-icons" style={{ fontSize: '1rem', marginRight: '0.25rem' }}>thumb_up</span>
                                         {prompt.likes}
-                                    </div>
+                                    </div>*/}
                                     <div className={styles.metric}>
                                         <span className="material-icons" style={{ fontSize: '1rem', marginRight: '0.25rem' }}>visibility</span>
                                         {prompt.views}
@@ -153,10 +188,14 @@ const Hub = () => {
                                         <span className="material-icons" style={{ fontSize: '1rem', marginRight: '0.25rem' }}>download</span>
                                         {prompt.downloads}
                                     </div>
+                                    {isAuthenticated && (
+                                        <>
+                                            <button className={styles.editBtn}>
+                                                <span className="material-icons" style={{ fontSize: '1.25rem' }}>edit</span>
+                                            </button>
+                                        </>
+                                    )}
 
-                                    <button className={styles.editBtn}>
-                                        <span className="material-icons" style={{ fontSize: '1.25rem' }}>edit</span>
-                                    </button>
                                 </div>
                             </div>
                         ))}

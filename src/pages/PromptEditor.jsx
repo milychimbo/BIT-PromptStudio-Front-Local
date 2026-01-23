@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../components/layout/DashboardLayout';
-import { fixPrompt } from '../services/api';
+import { fixPrompt, savePrompt } from '../services/api';
 import Styles from './PromptEditor.module.css';
+import { useMsal } from '@azure/msal-react';
 
 const PromptEditor = () => {
+    const { instance, accounts } = useMsal();
+    const account = instance.getActiveAccount() || accounts[0];
+
     const [promptText, setPromptText] = useState('');
     const [results, setResults] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -68,7 +72,10 @@ const PromptEditor = () => {
                 gradeColor: gradeColor,
                 tips: response.sugerencias.join('\n'),
                 improvedPrompt: response.prompt_mejorado,
-                problems: response.problemas_detectados
+                problems: response.problemas_detectados,
+                rawAnalysis: response.analisis_anatomia, // RAW DATA FOR SAVE
+                rawProblems: response.problemas_detectados, // RAW DATA
+                rawTips: response.sugerencias // RAW DATA
             });
             setLastAnalyzedPrompt(promptText); // Track the analyzed prompt
             setPromptName(response.nombre_prompt || 'Nombre del Prompt'); // Update prompt name from API
@@ -133,6 +140,36 @@ const PromptEditor = () => {
         showToastNotification('Editor reiniciado');
     };
 
+
+
+    const handleSave = async () => {
+        try {
+            setLoading(true);
+            const userId = "11111111-1111-1111-1111-111111111111"; // TEMP: Hardcoded for testing
+            // const userId = account?.localAccountId || account?.homeAccountId || ""; // TODO: Uncomment when backend is ready
+
+            const promptData = {
+                title: promptName,
+                description: "",
+                content: promptText,
+                tagIds: [],
+                qualityScore: parseInt(results.totalScore),
+                anatomyAnalysisJson: JSON.stringify(results.rawAnalysis),
+                detectedIssuesJson: JSON.stringify(results.rawProblems),
+                suggestionsJson: JSON.stringify(results.rawTips),
+                createdByUserId: userId
+            };
+
+            await savePrompt(promptData);
+            showToastNotification('Guardado exitosamente');
+        } catch (err) {
+            console.error(err);
+            showToastNotification('Error al guardar: ' + err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <DashboardLayout>
             <div className={Styles.container}>
@@ -141,7 +178,7 @@ const PromptEditor = () => {
                     <div className={Styles.header}>
                         <div className={Styles.title}>{promptName}</div>
                         <div className={Styles.meta}>
-                            Autor: <span className={Styles.author}>Emily Chimbo</span>
+                            Autor: <span className={Styles.author}>{account ? account.name : 'Usuario'}</span>
                         </div>
                         {/* <div className={Styles.meta}>
                             Descripción: Este es un prompt diseñado para generar Scripts de prueba a partir del DEF. :.......
@@ -180,7 +217,10 @@ const PromptEditor = () => {
                         >
                             Mejorar
                         </button>
-                        <button className={Styles.btnSave}>Guardar</button>
+                        <button className={Styles.btnSave}
+                            onClick={handleSave}
+                            disabled={!results || results.totalScore <= 80}
+                        >Guardar</button>
                     </div>
 
                     <div className={Styles.bottomToolbar}>

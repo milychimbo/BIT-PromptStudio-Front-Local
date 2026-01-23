@@ -1,8 +1,7 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Button from '../common/Button';
 import styles from './Navbar.module.css';
-import Modal from '../common/Modal';
 import { useTheme } from '../../context/ThemeContext';
 import logoLight from '../../assets/1.png';
 import logoDark from '../../assets/2.png';
@@ -12,23 +11,25 @@ import { loginRequest } from '../../authConfig';
 const Navbar = () => {
     const { theme, toggleTheme } = useTheme();
     const [isMenuOpen, setIsMenuOpen] = React.useState(false);
-    const [isHelpOpen, setIsHelpOpen] = React.useState(false);
+    const navigate = useNavigate();
 
     const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
-    const toggleHelp = (e) => {
-        e.preventDefault();
-        setIsHelpOpen(!isHelpOpen);
-        if (isMenuOpen) setIsMenuOpen(false);
-    };
 
     const { instance } = useMsal();
     const isAuthenticated = useIsAuthenticated();
+
     const handleLogin = () => {
         instance.loginRedirect(loginRequest).catch(e => console.log(e));
     };
+
     const handleLogout = () => {
         instance.logoutRedirect().catch(e => console.log(e));
     };
+
+    const handleGuestLogin = () => {
+        navigate('/hub');
+    };
+
     return (
         <>
             <nav className={styles.navbar}>
@@ -56,9 +57,8 @@ const Navbar = () => {
                                 {theme === 'light' ? 'dark_mode' : 'light_mode'}
                             </span>
                         </button>
-                        <button onClick={toggleHelp} className={styles.link} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: '0' }}>
-                            Ayuda
-                        </button>
+
+
 
                         {isAuthenticated ? (
                             <button onClick={handleLogout} className={styles.link} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: '0' }}>
@@ -69,6 +69,10 @@ const Navbar = () => {
                                 Log in
                             </button>
                         )}
+                        <button onClick={handleGuestLogin} className={styles.guestButton}>
+                            <span className="material-icons" style={{ fontSize: '1.2rem' }}>person</span>
+                            Ingresar como invitado
+                        </button>
                     </div>
 
                     <div className={`${styles.mobileMenu} ${isMenuOpen ? styles.mobileMenuOpen : ''}`} onClick={toggleMenu}>
@@ -82,11 +86,12 @@ const Navbar = () => {
                         <a href="#" className={styles.mobileLink}>Pricing</a>
                         <a href="#" className={styles.mobileLink}>Enterprise</a> */}
                             <button
-                                onClick={toggleHelp}
-                                className={styles.mobileLink}
-                                style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', width: '100%' }}
+                                onClick={handleGuestLogin}
+                                className={styles.guestButton}
+                                style={{ width: '100%', justifyContent: 'center', marginTop: '0.5rem' }}
                             >
-                                Ayuda
+                                <span className="material-icons" style={{ fontSize: '1.2rem' }}>person</span>
+                                Ingresar como invitado
                             </button>
                             <Link to="/login" className={styles.mobileLink}>Log in</Link>
                             {/* <Link to="/signup">
@@ -96,20 +101,6 @@ const Navbar = () => {
                     )}
                 </div>
             </nav>
-
-            <Modal isLoggedIn={false} isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} title="Ayuda">
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                    <p>El proyecto BIT PROMPT Studio se encarga del manejo de prompts.</p>
-                    <a
-                        href="https://registro-actividades.grupobusiness.it/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ color: 'var(--color-primary)', textDecoration: 'none', fontWeight: '500' }}
-                    >
-                        https://registro-actividades.grupobusiness.it/
-                    </a>
-                </div>
-            </Modal>
         </>
     );
 };
