@@ -170,13 +170,39 @@
     min-height: 0;
     overflow-y: auto;
     padding-bottom: 2rem;
-    /* Add some breathing room at bottom */
+    /* Move sidebar down as requested */
+    margin-top: 2rem;
 }
 
 @media (max-width: 1024px) {
     .sidebar {
         width: 100%;
+        margin-top: 0;
     }
+}
+
+.iconBtn {
+    background: transparent;
+    border: 1px solid var(--color-border-light);
+    color: var(--text-main);
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+[data-theme="dark"] .iconBtn {
+    border-color: var(--color-border-dark);
+}
+
+.iconBtn:hover {
+    background-color: var(--color-primary);
+    color: var(--color-bg-dark);
+    border-color: var(--color-primary);
 }
 
 

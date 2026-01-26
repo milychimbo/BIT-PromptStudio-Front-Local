@@ -36,13 +36,7 @@ const Sidebar = ({ isOpen, onClose }) => {
                 </Link>
             </div>
 
-            {isAuthenticated && (
-                <div className={styles.createButtonWrapper}>
-                    <Button to="/editor" className={styles.createButton}>
-                        <span className="material-icons">add</span> Nuevo Prompt
-                    </Button>
-                </div>
-            )}
+
 
             <nav className={styles.nav}>
                 <NavLink to="/hub" className={({ isActive }) => `${styles.link} ${isActive ? styles.linkActive : ''}`}>

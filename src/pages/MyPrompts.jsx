@@ -4,6 +4,7 @@ import styles from './Hub.module.css'; // Reusing Hub styles
 import Sidebar from '../components/layout/Sidebar';
 import { getPrompts } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import Button from '../components/common/Button';
 
 const MyPrompts = () => {
     const { user, loading: authLoading } = useAuth(); // Use auth context to get synced user
@@ -57,8 +58,13 @@ const MyPrompts = () => {
 
     const formatDate = (dateString) => {
         if (!dateString) return '';
-        const date = new Date(dateString);
-        return new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'short', year: 'numeric' }).format(date);
+        try {
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) return dateString || ''; // Return original string or empty if invalid
+            return new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'short', year: 'numeric' }).format(date);
+        } catch (e) {
+            return '';
+        }
     };
 
     return (
@@ -71,9 +77,14 @@ const MyPrompts = () => {
 
                 {/* Mis Prompts Section - reusing topPromptsSection style */}
                 <section className={styles.topPromptsSection} style={{ flex: 1, height: '100%' }}>
-                    <div className={styles.sectionHeader}>
-                        <span className="material-icons" style={{ color: 'var(--color-primary)' }}>folder_special</span>
-                        Mis Prompts
+                    <div className={styles.sectionHeader} style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '1rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <span className="material-icons" style={{ color: 'var(--color-primary)' }}>folder_special</span>
+                            Mis Prompts
+                        </div>
+                        <Button to="/editor" style={{ fontSize: '0.875rem', padding: '0.5rem 1rem', textDecoration: 'none' }}>
+                            <span className="material-icons" style={{ fontSize: '1rem' }}>add</span> Nuevo Prompt
+                        </Button>
                     </div>
 
                     {loading && <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>Cargando prompts...</div>}
@@ -86,7 +97,7 @@ const MyPrompts = () => {
                         </div>
                     )}
 
-                    {!loading && !error && prompts.length > 0 && (
+                    {!loading && !error && Array.isArray(prompts) && prompts.length > 0 && (
                         <div className={styles.promptsList}>
                             {prompts.map(prompt => (
                                 <div key={prompt.id} className={styles.promptCard}>
@@ -100,10 +111,10 @@ const MyPrompts = () => {
                                         </div>
                                     </div>
 
-                                    {/* Center: Tags (if any - structure provides tags: []) */}
+                                    {/* Center: Tags (safeguarded) */}
                                     <div className={styles.cardCenter}>
-                                        {prompt.tags && prompt.tags.map((tag, idx) => (
-                                            <span key={idx} className={styles.tag}>{tag.name || tag}</span>
+                                        {Array.isArray(prompt.tags) && prompt.tags.map((tag, idx) => (
+                                            <span key={idx} className={styles.tag}>{tag?.name || tag || ''}</span>
                                         ))}
                                     </div>
 

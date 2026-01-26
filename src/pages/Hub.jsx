@@ -23,12 +23,17 @@ const Hub = () => {
 
     React.useEffect(() => {
         const fetchPrompts = async () => {
-            const result = await getPrompts();
-            if (result && result.data) {
-                setPrompts(result.data);
-            } else if (Array.isArray(result)) {
-                setPrompts(result);
-            } else {
+            try {
+                const result = await getPrompts();
+                if (result && Array.isArray(result.data)) {
+                    setPrompts(result.data);
+                } else if (Array.isArray(result)) {
+                    setPrompts(result);
+                } else {
+                    setPrompts([]);
+                }
+            } catch (e) {
+                console.error("Failed to load prompts", e);
                 setPrompts([]);
             }
         };
@@ -37,7 +42,6 @@ const Hub = () => {
 
     return (
         <div className={styles.container}>
-            {/* Section 1: Sidebar */}
             {/* Section 1: Sidebar */}
             <Sidebar />
 

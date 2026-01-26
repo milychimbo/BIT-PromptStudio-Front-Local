@@ -186,7 +186,17 @@ const PromptEditor = () => {
                         </div>
                     </div>
 
-                    <div style={{ marginBottom: '0.25rem', fontSize: '0.875rem', fontWeight: 600 }}>Prompt:</div>
+                    <div style={{ marginBottom: '0.25rem', fontSize: '0.875rem', fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span>Prompt:</span>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <button className={Styles.iconBtn} onClick={handleCopy} title="Copiar">
+                                <span className="material-icons">content_copy</span>
+                            </button>
+                            <button className={Styles.iconBtn} onClick={handleDownload} title="Descargar">
+                                <span className="material-icons">download</span>
+                            </button>
+                        </div>
+                    </div>
                     <div className={Styles.editorSection}>
                         <textarea
                             className={Styles.editorTextarea}
@@ -222,11 +232,6 @@ const PromptEditor = () => {
                             onClick={handleSave}
                             disabled={!results || results.totalScore <= 80}
                         >Guardar</button>
-                    </div>
-
-                    <div className={Styles.bottomToolbar}>
-                        <button className={Styles.toolbarBtn} onClick={handleCopy}>COPIAR</button>
-                        <button className={Styles.toolbarBtn} onClick={handleDownload}>DESCARGAR</button>
                     </div>
                 </div>
 
