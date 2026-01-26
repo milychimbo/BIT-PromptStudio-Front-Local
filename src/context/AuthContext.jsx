@@ -20,15 +20,17 @@ export const AuthProvider = ({ children }) => {
                     const account = accounts[0];
                     const email = account.username; // email is usually username in Azure AD
                     const fullName = account.name;
+                    const entraObjectId = account.idTokenClaims?.oid;
 
                     console.log("Syncing user...", email);
-                    const result = await syncUser(email, fullName);
-                    console.log("Sync result:", result);
+                    const dbUser = await syncUser(email, fullName, entraObjectId);
+                    console.log("Sync result (DB User):", dbUser);
 
-                    // Set user state with basic info + sync result status if needed
+                    // Set user state with basic info + DB info (id, etc)
                     setUser({
                         ...account,
-                        syncStatus: result
+                        ...dbUser, // Merge DB user properties (like id)
+                        syncStatus: 'synced'
                     });
                 } catch (err) {
                     console.error("Error syncing user:", err);

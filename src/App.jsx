@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard';
 import PromptLibrary from './pages/PromptLibrary';
 import PromptEditor from './pages/PromptEditor';
 import Hub from './pages/Hub';
+import MyPrompts from './pages/MyPrompts';
 import { MsalProvider, MsalAuthenticationTemplate } from '@azure/msal-react';
 import { InteractionType } from '@azure/msal-browser';
 import { loginRequest } from './authConfig';
@@ -37,6 +38,7 @@ const App = ({ instance }) => {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/library" element={<PromptLibrary />} />
               <Route path="/editor" element={<PromptEditor />} />
+              <Route path="/my-prompts" element={<MyPrompts />} />
             </Route>
           </Routes>
         </Router>

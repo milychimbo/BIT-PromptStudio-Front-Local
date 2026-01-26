@@ -49,7 +49,7 @@ export const useApi = () => {
      * @param {string} fullName 
      * @returns {Promise<string>} Status message
      */
-    const syncUser = useCallback(async (email, fullName) => {
+    const syncUser = useCallback(async (email, fullName, entraObjectId) => {
         try {
             const token = await acquireToken();
 
@@ -57,12 +57,12 @@ export const useApi = () => {
             const existingUser = await apiService.getUserByEmail(email, token);
 
             if (existingUser) {
-                return "Usuario existente";
+                return existingUser;
             }
 
             // 2. If not, register user
-            await apiService.registerUser({ email, fullName }, token);
-            return "Usuario creado correctamente";
+            const newUser = await apiService.registerUser({ email, fullName, entraObjectId }, token);
+            return newUser;
 
         } catch (error) {
             console.error("Sync user failed:", error);

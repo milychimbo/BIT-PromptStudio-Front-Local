@@ -68,6 +68,25 @@ export const savePrompt = async (promptData, token = null) => {
 };
 
 /**
+ * Get prompts feed
+ * @param {number} page
+ * @param {number} pageSize
+ * @returns {Promise<Array>}
+ */
+export const getPrompts = async ({ page = 1, pageSize = 20, search = '', tagId = '', authorId = '' } = {}) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/prompts?page=${page}&pageSize=${pageSize}&search=${encodeURIComponent(search)}&tagId=${tagId}&authorId=${authorId}`);
+        if (!response.ok) {
+            throw new Error(`API Error: ${response.status} ${response.statusText}`);
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching prompts:', error);
+        return { data: [] };
+    }
+};
+
+/**
  * Get user by email
  * @param {string} email - The user's email
  * @param {string} token - The access token

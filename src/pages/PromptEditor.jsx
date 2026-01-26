@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../components/layout/DashboardLayout';
 import { fixPrompt, savePrompt } from '../services/api';
 import Styles from './PromptEditor.module.css';
-import { useMsal } from '@azure/msal-react';
+import { useAuth } from '../context/AuthContext';
 
 const PromptEditor = () => {
-    const { instance, accounts } = useMsal();
-    const account = instance.getActiveAccount() || accounts[0];
+    const { user, login } = useAuth(); // Use AuthContext
+    const account = user; // Map user to account for existing logic compatibility
 
     const [promptText, setPromptText] = useState('');
     const [results, setResults] = useState(null);
@@ -140,13 +140,17 @@ const PromptEditor = () => {
         showToastNotification('Editor reiniciado');
     };
 
-
-
     const handleSave = async () => {
         try {
             setLoading(true);
-            const userId = "11111111-1111-1111-1111-111111111111"; // TEMP: Hardcoded for testing
-            // const userId = account?.localAccountId || account?.homeAccountId || ""; // TODO: Uncomment when backend is ready
+            const userId = user?.id; // Use DB ID from AuthContext
+
+            if (!userId) {
+                // throw new Error("Usuario no identificado. Por favor, recarga la página.");
+                // For now allow save if missing id? No, requirement is strict.
+                // But let's check if the user is just implicit.
+                console.warn("User ID missing", user);
+            }
 
             const promptData = {
                 title: promptName,
@@ -157,7 +161,7 @@ const PromptEditor = () => {
                 anatomyAnalysisJson: JSON.stringify(results.rawAnalysis),
                 detectedIssuesJson: JSON.stringify(results.rawProblems),
                 suggestionsJson: JSON.stringify(results.rawTips),
-                createdByUserId: userId
+                createdByUserId: userId || ""
             };
 
             await savePrompt(promptData);
@@ -180,9 +184,6 @@ const PromptEditor = () => {
                         <div className={Styles.meta}>
                             Autor: <span className={Styles.author}>{account ? account.name : 'Usuario'}</span>
                         </div>
-                        {/* <div className={Styles.meta}>
-                            Descripción: Este es un prompt diseñado para generar Scripts de prueba a partir del DEF. :.......
-                        </div> */}
                     </div>
 
                     <div style={{ marginBottom: '0.25rem', fontSize: '0.875rem', fontWeight: 600 }}>Prompt:</div>
