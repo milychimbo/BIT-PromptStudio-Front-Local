@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { useMsal } from '@azure/msal-react';
 import { loginRequest } from '../authConfig';
 import * as apiService from '../services/api';
@@ -9,7 +10,7 @@ import * as apiService from '../services/api';
 export const useApi = () => {
     const { instance, accounts } = useMsal();
 
-    const acquireToken = async () => {
+    const acquireToken = useCallback(async () => {
         const account = accounts[0];
         if (!account) {
             throw new Error("No active account! Verify a user has been signed in and setActiveAccount has been called.");
@@ -30,9 +31,9 @@ export const useApi = () => {
             // For now we'll rethrow so the component knows auth failed.
             throw error;
         }
-    };
+    }, [instance, accounts]);
 
-    const fixPrompt = async (prompt) => {
+    const fixPrompt = useCallback(async (prompt) => {
         try {
             const token = await acquireToken();
             return await apiService.fixPrompt(prompt, token);
@@ -40,9 +41,37 @@ export const useApi = () => {
             console.error("API call failed:", error);
             throw error;
         }
-    };
+    }, [acquireToken]);
+
+    /**
+     * Sync user with backend: Check if exists, if not register.
+     * @param {string} email 
+     * @param {string} fullName 
+     * @returns {Promise<string>} Status message
+     */
+    const syncUser = useCallback(async (email, fullName) => {
+        try {
+            const token = await acquireToken();
+
+            // 1. Check if user exists
+            const existingUser = await apiService.getUserByEmail(email, token);
+
+            if (existingUser) {
+                return "Usuario existente";
+            }
+
+            // 2. If not, register user
+            await apiService.registerUser({ email, fullName }, token);
+            return "Usuario creado correctamente";
+
+        } catch (error) {
+            console.error("Sync user failed:", error);
+            throw error;
+        }
+    }, [acquireToken]);
 
     return {
-        fixPrompt
+        fixPrompt,
+        syncUser
     };
 };

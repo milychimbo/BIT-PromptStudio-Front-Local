@@ -9,6 +9,7 @@ import Hub from './pages/Hub';
 import { MsalProvider, MsalAuthenticationTemplate } from '@azure/msal-react';
 import { InteractionType } from '@azure/msal-browser';
 import { loginRequest } from './authConfig';
+import { AuthProvider } from './context/AuthContext';
 
 const ProtectedLayout = () => {
   return (
@@ -24,20 +25,22 @@ const ProtectedLayout = () => {
 const App = ({ instance }) => {
   return (
     <MsalProvider instance={instance}>
-      <Router>
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/hub" element={<Hub />} />
+      <AuthProvider>
+        <Router>
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/hub" element={<Hub />} />
 
-          {/* Protected Routes */}
-          <Route element={<ProtectedLayout />}>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/library" element={<PromptLibrary />} />
-            <Route path="/editor" element={<PromptEditor />} />
-          </Route>
-        </Routes>
-      </Router>
+            {/* Protected Routes */}
+            <Route element={<ProtectedLayout />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/library" element={<PromptLibrary />} />
+              <Route path="/editor" element={<PromptEditor />} />
+            </Route>
+          </Routes>
+        </Router>
+      </AuthProvider>
     </MsalProvider>
   );
 }
