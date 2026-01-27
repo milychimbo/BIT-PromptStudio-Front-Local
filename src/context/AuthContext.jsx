@@ -1,27 +1,61 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useMsal, useIsAuthenticated } from "@azure/msal-react";
+import { useApi } from '../hooks/useApi';
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
+    const { instance, accounts } = useMsal();
+    const isAuthenticated = useIsAuthenticated();
+    const { syncUser } = useApi();
     const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
 
-    const login = (email) => {
-        // Mock login by extracting name from email or using a default
-        const name = email.split('@')[0];
-        const mockUser = {
-            name: name.charAt(0).toUpperCase() + name.slice(1),
-            email: email,
-            avatar: `https://ui-avatars.com/api/?name=${name}&background=random`
+    useEffect(() => {
+        const checkUser = async () => {
+            if (isAuthenticated && accounts.length > 0) {
+                setLoading(true);
+                try {
+                    const account = accounts[0];
+                    const email = account.username; // email is usually username in Azure AD
+                    const fullName = account.name;
+                    const entraObjectId = account.idTokenClaims?.oid;
+
+                    console.log("Syncing user...", email);
+                    const dbUser = await syncUser(email, fullName, entraObjectId);
+                    console.log("Sync result (DB User):", dbUser);
+
+                    // Set user state with basic info + DB info (id, etc)
+                    setUser({
+                        ...account,
+                        ...dbUser, // Merge DB user properties (like id)
+                        syncStatus: 'synced'
+                    });
+                } catch (err) {
+                    console.error("Error syncing user:", err);
+                    setError(err);
+                } finally {
+                    setLoading(false);
+                }
+            } else {
+                setUser(null);
+            }
         };
-        setUser(mockUser);
+
+        checkUser();
+    }, [isAuthenticated, accounts, syncUser]); // Dependencies for effect
+
+    const login = () => {
+        // MSAL handles login, this might not be needed or can check instance.loginRedirect
     };
 
     const logout = () => {
-        setUser(null);
+        instance.logoutRedirect();
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, logout }}>
+        <AuthContext.Provider value={{ user, login, logout, loading, error }}>
             {children}
         </AuthContext.Provider>
     );
