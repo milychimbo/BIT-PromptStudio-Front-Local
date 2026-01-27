@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, Link } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useMsal, useIsAuthenticated } from '@azure/msal-react';
 import { useTheme } from '../../context/ThemeContext';
 import logoLight from '../../assets/1.png';
 import logoDark from '../../assets/2.png';
@@ -8,8 +8,21 @@ import Button from '../common/Button';
 import styles from './Sidebar.module.css';
 
 const Sidebar = ({ isOpen, onClose }) => {
-    const { user } = useAuth();
+    const { instance, accounts } = useMsal();
+    const isAuthenticated = useIsAuthenticated();
     const { theme } = useTheme();
+
+    const handleLogout = () => {
+        instance.logoutRedirect({
+            postLogoutRedirectUri: "/",
+        });
+    };
+
+    const user = isAuthenticated && accounts[0] ? {
+        name: accounts[0].name,
+        email: accounts[0].username,
+        avatar: null // MSAL doesn't give avatar URL directly without Graph call
+    } : null;
 
     const sidebarClass = `${styles.sidebar} ${isOpen ? styles.sidebarOpen : ''}`;
 
@@ -23,40 +36,41 @@ const Sidebar = ({ isOpen, onClose }) => {
                 </Link>
             </div>
 
-            <div className={styles.createButtonWrapper}>
-                <Button to="/editor" className={styles.createButton}>
-                    <span className="material-icons">add</span> Nuevo Prompt
-                </Button>
-            </div>
+
 
             <nav className={styles.nav}>
-                {/* <NavLink to="/dashboard" className={({ isActive }) => `${styles.link} ${isActive ? styles.linkActive : ''}`}>
-                    <span className="material-icons">dashboard</span> Dashboard
+                <NavLink to="/hub" className={({ isActive }) => `${styles.link} ${isActive ? styles.linkActive : ''}`}>
+                    <span className="material-icons">dashboard</span> Hub
                 </NavLink>
+                {isAuthenticated && (
+                    <NavLink to="/my-prompts" className={({ isActive }) => `${styles.link} ${isActive ? styles.linkActive : ''}`}>
+                        <span className="material-icons">folder_special</span> Mis Prompts
+                    </NavLink>
+                )}
                 <NavLink to="/library" className={({ isActive }) => `${styles.link} ${isActive ? styles.linkActive : ''}`}>
-                    <span className="material-icons">library_books</span> My Prompts
+                    <span className="material-icons">library_books</span> Biblioteca
                 </NavLink>
-                <NavLink to="/collections" className={({ isActive }) => `${styles.link} ${isActive ? styles.linkActive : ''}`}>
-                    <span className="material-icons">category</span> Collections
-                </NavLink>
-                <NavLink to="/analytics" className={({ isActive }) => `${styles.link} ${isActive ? styles.linkActive : ''}`}>
-                    <span className="material-icons">analytics</span> Analytics
-                </NavLink>
-                <NavLink to="/team" className={({ isActive }) => `${styles.link} ${isActive ? styles.linkActive : ''}`}>
-                    <span className="material-icons">group</span> Team
-                </NavLink> */}
             </nav>
 
             <div className={styles.footer}>
-                {/* <div className={styles.link} style={{ marginBottom: '0.5rem', cursor: 'pointer' }}>
-                    <span className="material-icons">settings</span> Settings
-                </div> */}
+                {isAuthenticated && (
+                    <div
+                        className={styles.link}
+                        onClick={handleLogout}
+                        style={{ marginBottom: '0.5rem', cursor: 'pointer', color: '#ef4444' }}
+                    >
+                        <span className="material-icons">logout</span> Cerrar Sesión
+                    </div>
+                )}
+
                 {user && (
                     <div className={styles.userProfile}>
                         {user.avatar ? (
                             <img src={user.avatar} alt="User" style={{ width: '2rem', height: '2rem', borderRadius: '50%' }} />
                         ) : (
-                            <div style={{ width: '2rem', height: '2rem', borderRadius: '50%', backgroundColor: '#EA580C' }}></div>
+                            <div style={{ width: '2rem', height: '2rem', borderRadius: '50%', backgroundColor: '#EA580C', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
+                                {user.name.charAt(0)}
+                            </div>
                         )}
                         <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ fontWeight: 500, fontSize: '0.875rem', color: 'var(--text-main)' }}>{user.name}</div>

@@ -1,83 +1,49 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useIsAuthenticated, useMsal } from '@azure/msal-react';
 import { useTheme } from '../context/ThemeContext';
+import Sidebar from '../components/layout/Sidebar';
 import styles from './Hub.module.css';
-import logoLight from '../assets/1.png';
-import logoDark from '../assets/2.png';
+import { getPrompts } from '../services/api';
 
 const Hub = () => {
     const { theme } = useTheme();
+    const isAuthenticated = useIsAuthenticated();
+    const { instance } = useMsal();
+    const navigate = useNavigate();
 
-    const topPrompts = [
-        {
-            id: 1,
-            title: "SEO Blog Post Generator",
-            desc: "Create comprehensive SEO-optimized blog posts with keyword integration.",
-            author: "Emily Chimbo",
-            tags: ["Marketing", "SEO", "Content"],
-            rating: 4.8,
-            likes: 1240,
-            views: "5.2k",
-            downloads: 856
-        },
-        {
-            id: 2,
-            title: "Python API Refactor Assistant",
-            desc: "Expertly refactor Python legacy code to modern standards.",
-            author: "Johann Calva",
-            tags: ["Dev", "Python", "Clean Code"],
-            rating: 4.9,
-            likes: 980,
-            views: "3.1k",
-            downloads: 620
-        },
-        {
-            id: 3,
-            title: "React Component Unit Tester",
-            desc: "Generate Jest + Testing Library test cases instantly.",
-            author: "Dev Team",
-            tags: ["React", "Testing", "Javascript"],
-            rating: 4.5,
-            likes: 750,
-            views: "2.8k",
-            downloads: 410
-        },
-        {
-            id: 4,
-            title: "Data Analysis SQL Helper",
-            desc: "Convert plain English questions into complex SQL queries.",
-            author: "Data Squad",
-            tags: ["Data", "SQL", "Analytics"],
-            rating: 4.7,
-            likes: 620,
-            views: "2.5k",
-            downloads: 380
-        }
-    ];
+    const handleLogout = () => {
+        instance.logoutRedirect({
+            postLogoutRedirectUri: "/",
+        });
+    };
+
+    const [filterType, setFilterType] = React.useState('Nombre');
+    const [prompts, setPrompts] = React.useState([]);
+
+    React.useEffect(() => {
+        const fetchPrompts = async () => {
+            try {
+                const result = await getPrompts();
+                if (result && Array.isArray(result.data)) {
+                    setPrompts(result.data);
+                } else if (Array.isArray(result)) {
+                    setPrompts(result);
+                } else {
+                    setPrompts([]);
+                }
+            } catch (e) {
+                console.error("Failed to load prompts", e);
+                setPrompts([]);
+            }
+        };
+        fetchPrompts();
+    }, []);
 
     return (
         <div className={styles.container}>
             {/* Section 1: Sidebar */}
-            <aside className={styles.sidebar}>
-                <Link to="/" className={styles.logoArea}>
-                    <img src={theme === 'light' ? logoLight : logoDark} alt="Bit Prompt Studio" className={styles.logoIcon} />
-                </Link>
-
-                <nav className={styles.nav}>
-                    <button className={styles.navButton}>
-                        <span className="material-icons">add</span>
-                        Nuevo Prompt
-                    </button>
-                    <button className={styles.navButton}>
-                        <span className="material-icons">folder_special</span>
-                        Mis Prompts
-                    </button>
-                    <button className={styles.navButton}>
-                        <span className="material-icons">library_books</span>
-                        Biblioteca
-                    </button>
-                </nav>
-            </aside>
+            <Sidebar />
 
             {/* Main Content (Sections 2 & 3) */}
             <main className={styles.mainContent}>
@@ -93,13 +59,19 @@ const Hub = () => {
 
                     <div className={styles.chatInputArea}>
                         <div className={styles.inputWrapper}>
-                            <button className={styles.filterBtn}>
-                                <span className="material-icons">tune</span>
-                            </button>
+                            <select
+                                className={styles.filterSelect}
+                                value={filterType}
+                                onChange={(e) => setFilterType(e.target.value)}
+                            >
+                                <option value="Nombre">Nombre</option>
+                                <option value="Tag">Tag</option>
+                                <option value="Autor">Autor</option>
+                            </select>
                             <input
                                 type="text"
                                 className={styles.chatInput}
-                                placeholder="Escribe tu prompt..."
+                                placeholder="Busca un prompt a tu medida..."
                             />
                             <button className={styles.sendBtn}>
                                 <span className="material-icons">arrow_upward</span>
@@ -116,22 +88,22 @@ const Hub = () => {
                     </div>
 
                     <div className={styles.promptsList}>
-                        {topPrompts.map(prompt => (
+                        {prompts.map(prompt => (
                             <div key={prompt.id} className={styles.promptCard}>
                                 {/* Left: Info */}
                                 <div className={styles.cardLeft}>
                                     <h3 className={styles.promptTitle}>{prompt.title}</h3>
-                                    <p className={styles.promptDesc}>{prompt.desc}</p>
+                                    <p className={styles.promptDesc}>{prompt.description}</p>
                                     <div className={styles.promptAuthor}>
                                         <div className={styles.authorAvatar}></div>
-                                        <span>{prompt.author}</span>
+                                        <span>{prompt.creatorName}</span>
                                     </div>
                                 </div>
 
                                 {/* Center: Tags */}
                                 <div className={styles.cardCenter}>
-                                    {prompt.tags.map((tag, idx) => (
-                                        <span key={idx} className={styles.tag}>{tag}</span>
+                                    {prompt.tags && prompt.tags.map((tag, idx) => (
+                                        <span key={idx} className={styles.tag}>{tag.name || tag}</span>
                                     ))}
                                 </div>
 
@@ -139,24 +111,28 @@ const Hub = () => {
                                 <div className={styles.cardRight}>
                                     <div className={styles.metric}>
                                         <span className="material-icons" style={{ fontSize: '1rem', marginRight: '0.25rem' }}>star</span>
-                                        <span className={styles.rating}>{prompt.rating}</span>/5
+                                        <span className={styles.rating}>{prompt.bestVersionScore}</span>%
                                     </div>
-                                    <div className={styles.metric}>
+                                    {/*<div className={styles.metric}>
                                         <span className="material-icons" style={{ fontSize: '1rem', marginRight: '0.25rem' }}>thumb_up</span>
                                         {prompt.likes}
-                                    </div>
+                                    </div>*/}
                                     <div className={styles.metric}>
                                         <span className="material-icons" style={{ fontSize: '1rem', marginRight: '0.25rem' }}>visibility</span>
-                                        {prompt.views}
+                                        {prompt.viewCount}
                                     </div>
                                     <div className={styles.metric}>
                                         <span className="material-icons" style={{ fontSize: '1rem', marginRight: '0.25rem' }}>download</span>
-                                        {prompt.downloads}
+                                        {prompt.useCount}
                                     </div>
+                                    {isAuthenticated && (
+                                        <>
+                                            <button className={styles.editBtn}>
+                                                <span className="material-icons" style={{ fontSize: '1.25rem' }}>edit</span>
+                                            </button>
+                                        </>
+                                    )}
 
-                                    <button className={styles.editBtn}>
-                                        <span className="material-icons" style={{ fontSize: '1.25rem' }}>edit</span>
-                                    </button>
                                 </div>
                             </div>
                         ))}

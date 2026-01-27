@@ -137,3 +137,35 @@
         opacity: 1;
     }
 }
+
+.guestButton {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: var(--color-primary);
+    color: white;
+    /* Checking contrast with #94BE47 usually needs dark text or high contrast, but user asked for "characteristic green" background */
+    border: none;
+    padding: 0.5rem 1.25rem;
+    border-radius: 9999px;
+    /* Pill shape */
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    text-decoration: none;
+}
+
+/* Adjust text color for better contrast if primary is light green */
+/* var(--color-primary) is #94BE47 */
+
+.guestButton:hover {
+    background-color: var(--color-primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.guestButton:active {
+    transform: translateY(0);
+}

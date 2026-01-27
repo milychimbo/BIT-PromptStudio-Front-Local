@@ -16,7 +16,7 @@ const Login = () => {
 
     useEffect(() => {
         if (isAuthenticated) {
-            navigate('/editor');
+            navigate('/hub');
         }
     }, [isAuthenticated, navigate]);
 

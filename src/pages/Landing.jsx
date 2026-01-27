@@ -3,13 +3,24 @@ import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import Button from '../components/common/Button';
 import styles from './Landing.module.css';
-import { Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import { useIsAuthenticated } from '@azure/msal-react';
+import { useEffect } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import logoLight from '../assets/1.png';
 import logoDark from '../assets/2.png';
 
 const Landing = () => {
     const { theme } = useTheme();
+    const isAuthenticated = useIsAuthenticated();
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            navigate('/hub');
+        }
+    }, [isAuthenticated, navigate]);
+
     return (
         <div className="landing-page">
             <Navbar />
